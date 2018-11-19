@@ -24,8 +24,10 @@ for hashtag, emotions in hashtags.items():
 
 f_dev = open('twitter_train.txt', 'a')
 f_test = open('twitter_dev.txt', 'a')
-f_dict = open('words2ids.dict', 'wb')
-f_dict = open('ids2words.dict', 'wb')
+f_dict1 = open('words2ids.dict', 'wb')
+f_dict2 = open('ids2words.dict', 'wb')
+f_dev.truncate()
+f_test.truncate()
 for line, length, label in lines:
 	if random() > percent_dev:
 		file = f_test
@@ -35,13 +37,14 @@ for line, length, label in lines:
 		file = f_dev
 		num = dev_num
 		dev_num += 1
-	added_padding = ' '.join(line + [padding]*(max_split - length))
+	added_padding = ' '.join(line[:-1] + [padding]*(max_split - length)).replace('|', '')
 	file.write(formatting.format(num=num, 
 								 seq=added_padding,
 								 l=length,
 								 lab=label))
-pickle.dump({word:i for i, word in enumerate(smile_emoji)}, f_dict, pickle.HIGHEST_PROTOCOL)
-pickle.dump({i:word for i, word in enumerate(smile_emoji)}, f_dict, pickle.HIGHEST_PROTOCOL)
-f_dict.close()
+pickle.dump({word:i for i, word in enumerate(smile_emoji)}, f_dict1, pickle.HIGHEST_PROTOCOL)
+pickle.dump({i:word for i, word in enumerate(smile_emoji)}, f_dict2, pickle.HIGHEST_PROTOCOL)
+f_dict1.close()
+f_dict2.close()
 f_dev.close()
 f_test.close()
