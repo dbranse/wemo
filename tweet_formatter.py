@@ -19,8 +19,8 @@ for hashtag, emotions in hashtags.items():
 				lines.append((s, length, label_map[hashtag]))
 				max_split = max(max_split, length)
 
-f_dev = open('twitter_dev.txt', 'a')
-f_test = open('twitter_test.txt', 'a')
+f_dev = open('twitter_train.txt', 'a')
+f_test = open('twitter_dev.txt', 'a')
 for line, length, label in lines:
 	if random() > percent_dev:
 		file = f_test
