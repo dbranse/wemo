@@ -7,10 +7,7 @@ from tweepy.streaming import StreamListener
 from datetime import timedelta, date
 from multiprocessing import Pool
 
-consumer_key = '5pfqIj1PMnnY3m5fkb82n04aj'
-consumer_secret = '3dn7vzfa9vdTNNyJqhnpkzUwhg7BsOiLOtlExp7JQPlqDtCsgQ'
-access_token = '850871263723741188-XliqVJnmaAhtVHp8wqibdYBVp7m7XX1'
-access_secret = '3R5Pd9pF588zC2OwldnOVMi3DrUBYzrsoaptyx2jMzCxv'
+
  
 auth = OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
