@@ -26,7 +26,10 @@ f_dev = open('twitter_train.txt', 'a')
 f_test = open('twitter_dev.txt', 'a')
 f_dict1 = open('words2ids.dict', 'wb')
 f_dict2 = open('ids2words.dict', 'wb')
-
+f_dev.seek(0)
+f_test.seek(0)
+f_dev.truncate()
+f_test.truncate()
 for line, length, label in lines:
 	if random() > percent_dev:
 		file = f_test
