@@ -1,5 +1,6 @@
 from tweet_collector import hashtags
 from random import random
+import pickle
 
 max_split = 0
 padding = '<pad>'
@@ -9,7 +10,7 @@ test_num = 0
 dev_num = 0
 percent_dev = 0.80
 label_map = {"other":0, "happy":1, "sad":2, "angry":3}
-
+smile_emoji = set()
 for hashtag, emotions in hashtags.items():
 	for e in emotions:
 		with open(e + '.txt', 'r+') as f:
@@ -18,9 +19,12 @@ for hashtag, emotions in hashtags.items():
 				length = len(s)
 				lines.append((s, length, label_map[hashtag]))
 				max_split = max(max_split, length)
+				for word in s:
+					smile_emoji.add(word)
 
 f_dev = open('twitter_train.txt', 'a')
 f_test = open('twitter_dev.txt', 'a')
+f_dict = open('words2ids.dict', 'wb')
 for line, length, label in lines:
 	if random() > percent_dev:
 		file = f_test
@@ -35,6 +39,7 @@ for line, length, label in lines:
 								 seq=added_padding,
 								 l=length,
 								 lab=label))
-
+pickle.dump({word:i for i, word in enumerate(smile_emoji)}, f_dict, pickle.HIGHEST_PROTOCOL)
+f_dict.close()
 f_dev.close()
 f_test.close()
