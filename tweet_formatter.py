@@ -41,8 +41,8 @@ for line, length, label in lines:
         file = f_dev
         num = dev_num
         dev_num += 1
-    line = ' '.join(line + [padding]*(max_split - length)).replace('|', '')
-    repeatedChars = ['.', '?', '!', ',', "'"]
+    line = ' '.join(line[:-1] + [padding]*(max_split - length)).replace('|', '')
+    repeatedChars = ['.', '?', '!', ',', "'", "\""]
     for c in repeatedChars:
         lineSplit = line.split(c)
         while True:
@@ -57,8 +57,14 @@ for line, length, label in lines:
     # Remove any duplicate spaces
     duplicateSpacePattern = re.compile(r'\ +')
     conv = re.sub(duplicateSpacePattern, ' ', conv)
+    if '#arousal' in conv:
+        print('asdf')
+        print(conv)
+        print(conv.split(' '))
     for word in conv.split(' '):
         smile_emoji.add(word)
+        if word == '#arousal':
+            print('meme')
     file.write(formatting.format(num=num, 
                                  seq=conv,
                                  l=length,
