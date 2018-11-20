@@ -41,7 +41,7 @@ for line, length, label in lines:
         num = dev_num
         dev_num += 1
     line = ' '.join(line + [padding]*(max_split - length)).replace('|', '')
-    repeatedChars = ['.', '?', '!', ',']
+    repeatedChars = ['.', '?', '!', ',', "'"]
     for c in repeatedChars:
         lineSplit = line.split(c)
         while True:
@@ -56,6 +56,8 @@ for line, length, label in lines:
     # Remove any duplicate spaces
     duplicateSpacePattern = re.compile(r'\ +')
     conv = re.sub(duplicateSpacePattern, ' ', conv)
+    for word in conv.split():
+        smile_emoji.add(word)
     file.write(formatting.format(num=num, 
                                  seq=conv,
                                  l=length,
