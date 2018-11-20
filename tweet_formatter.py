@@ -2,6 +2,7 @@ from tweet_collector import hashtags
 from random import random
 import pickle
 import re
+import string
 
 max_split = 0
 padding = '<pad>'
@@ -56,6 +57,7 @@ for line, length, label in lines:
     # Remove any duplicate spaces
     duplicateSpacePattern = re.compile(r'\ +')
     conv = re.sub(duplicateSpacePattern, ' ', conv)
+    conv = ''.join(filter(lambda x: x in string.printable, conv))
     for word in conv.split():
         smile_emoji.add(word)
     file.write(formatting.format(num=num, 
