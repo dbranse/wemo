@@ -57,8 +57,7 @@ for line, length, label in lines:
     # Remove any duplicate spaces
     duplicateSpacePattern = re.compile(r'\ +')
     conv = re.sub(duplicateSpacePattern, ' ', conv)
-    conv = ''.join(filter(lambda x: x in string.printable, conv))
-    for word in conv.split():
+    for word in conv.split(' '):
         smile_emoji.add(word)
     file.write(formatting.format(num=num, 
                                  seq=conv,
