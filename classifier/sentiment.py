@@ -26,7 +26,7 @@ from tqdm import tqdm
 
 # Stencil imports
 import embeddings
-from dataset import SentimentDataset
+from dataset import SentimentDataset, SentimentDatasetEval
 import hyperparams
 
 class SentimentNetwork(nn.Module):
@@ -178,7 +178,33 @@ def train(hp, embedding_lookup):
 def evaluate(hp, embedding_lookup):
     """ This is used for the evaluation of the net. """
     mode = 'test' # use test data
-    dataset = SentimentDataset(args.data, mode)
+
+    # data_dir = args.data
+    # data = pd.read_csv(path.join(data_dir, mode + "_data.txt"), delimiter='|')
+    # word2idx = np.load(path.join(data_dir, "word2idx.dict"))
+    # sentences = data['sentence']
+    # labels = data['labels']
+    # data_size = len(sentences)
+    # for i, sentence in enumerate(sentences):
+    #     turns = sentence.split('\t')
+    #     turn1 = turns[0].split(' ')
+    #     turn3 = turns[1].split(' ')
+    #     label = labels[i]
+    #     seq_len = seq_len.to(DEV)
+    #     label = label.to(DEV)
+    #     model.eval()
+    #     with torch.no_grad():
+    #             t1output = model(turns[0], seq_len)
+    #             t1label = t1output.argmax()
+    #             t2output = model(turns[1], seq_len)
+    #             t2label = t2output.argmax()
+    #
+    #             # TODO obtain a sentiment class prediction from output
+    #             confusion[label][predicted_label] += 1
+
+
+
+    dataset = SentimentDatasetEval(args.data, mode)
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=6)
     model = SentimentNetwork(hp.rnn_hidden_size, embedding_lookup, device=DEV)
     model.load_state_dict(torch.load(args.restore))
@@ -186,16 +212,33 @@ def evaluate(hp, embedding_lookup):
     data_size = len(dataset)
 
     confusion = np.zeros((4,4)) # TODO fill out this confusion matrix
-    for (vectorized_seq, seq_len), label in tqdm(dataloader, ascii=True):
-        vectorized_seq = vectorized_seq
-        seq_len = seq_len.to(DEV)
+    #1 turn eval
+    # for (vectorized_seq, seq_len), label in tqdm(dataloader, ascii=True):
+    #     vectorized_seq = vectorized_seq
+    #     seq_len = seq_len.to(DEV)
+    #     label = label.to(DEV)
+    #     model.eval()
+    #     with torch.no_grad():
+    #         output = model(vectorized_seq, seq_len)
+    #         # TODO obtain a sentiment class prediction from output
+    #         predicted_label = output.argmax()
+    #         # TODO obtain a sentiment class prediction from output
+    #         confusion[label][predicted_label] += 1
+    # 2 turn eval
+    for (turn1, len1, turn3, len3), label in tqdm(dataloader, ascii=True):
+        len1 = len1.to(DEV)
+        len3 = len3.to(DEV)
         label = label.to(DEV)
         model.eval()
         with torch.no_grad():
-            output = model(vectorized_seq, seq_len)
-            # TODO obtain a sentiment class prediction from output
-            predicted_label = output.argmax()
-            # TODO obtain a sentiment class prediction from output
+            output1 = model(turn1, len1)
+            predicted_label1 = output1.argmax()
+            output3 = model(turn3, len3)
+            predicted_label3 = output3.argmax()
+
+            predicted_label = predicted_label3
+            if predicted_label.item() == 0:
+                predicted_label = predicted_label1
             confusion[label][predicted_label] += 1
 
     # baseline constants

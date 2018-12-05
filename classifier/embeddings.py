@@ -48,7 +48,7 @@ class Elmo(nn.Module):
                 torch tensor on self._dev
         """
          # 1. Map each sentence in batch to a list of string tokens (hint: use idx2word)
-        batch = [[self.idx2word[id] for id in sentence] for sentence in batch]
+        batch = [[self.idx2word[id.item()] for id in sentence] for sentence in batch]
         # 2. Use allen_elmo.batch_to_ids to convert sentences to character ids.
         return allen_elmo.batch_to_ids(batch)
 
