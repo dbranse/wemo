@@ -13,14 +13,17 @@ class SentimentDataset(Dataset):
     This is the Dataset class for this net. When initializing the dataset we
     specify mode "train", "dev", or "test". We will be using the 5-class Stanford Sentiment Treebank (SST-5).
     """
-    def __init__(self, data_dir, mode):
+    def __init__(self, data_dir, mode, fb=False):
         """
         This is the constructor of the dataset
         Args:
             :param data_dir (str): Path to the directory containing your data files.
             :param mode (str): This determines which dataset to load (train, dev or test).
         """
-        data = pd.read_csv(path.join(data_dir, mode+"_data.txt"), delimiter='|')
+        if fb:
+            data = pd.read_csv(path.join(data_dir, 'fb_'+mode+"_data.txt"), delimiter='|')
+        else:
+            data = pd.read_csv(path.join(data_dir, mode+"_data.txt"), delimiter='|')
         word2idx = np.load(path.join(data_dir, "word2idx.dict"))
         sentences = [sentence.split(' ') for sentence in data['sentence']]
         self.data_len = data['sequence_length'].values
