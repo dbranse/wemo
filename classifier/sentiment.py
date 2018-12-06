@@ -111,7 +111,7 @@ class SentimentNetwork(nn.Module):
         output = classified[unperm_idx]
         return output
 
-def train(hp, embedding_lookup):
+def train(hp, embedding_lookup, fb = False):
     """ This is the main training loop
             :param hp: HParams instance (see hyperparams.py)
             :param embedding_lookup: torch module for performing embedding lookups (see embeddings.py)
@@ -119,7 +119,7 @@ def train(hp, embedding_lookup):
     modes = ['train', 'dev']
 
     # Note: each of these are dicts that map mode -> object, depending on if we're using the training or dev data.
-    datasets = {mode: SentimentDataset(args.data, mode) for mode in modes}
+    datasets = {mode: SentimentDataset(args.data, mode, fb) for mode in modes}
     data_sizes = {mode: len(datasets[mode]) for mode in modes} # hint: useful for averaging loss per batch
     dataloaders = {mode: DataLoader(datasets[mode], batch_size=hp.batch_size, shuffle=True, num_workers=6, drop_last=True) for mode in modes}
 
@@ -178,31 +178,6 @@ def train(hp, embedding_lookup):
 def evaluate(hp, embedding_lookup):
     """ This is used for the evaluation of the net. """
     mode = 'test' # use test data
-
-    # data_dir = args.data
-    # data = pd.read_csv(path.join(data_dir, mode + "_data.txt"), delimiter='|')
-    # word2idx = np.load(path.join(data_dir, "word2idx.dict"))
-    # sentences = data['sentence']
-    # labels = data['labels']
-    # data_size = len(sentences)
-    # for i, sentence in enumerate(sentences):
-    #     turns = sentence.split('\t')
-    #     turn1 = turns[0].split(' ')
-    #     turn3 = turns[1].split(' ')
-    #     label = labels[i]
-    #     seq_len = seq_len.to(DEV)
-    #     label = label.to(DEV)
-    #     model.eval()
-    #     with torch.no_grad():
-    #             t1output = model(turns[0], seq_len)
-    #             t1label = t1output.argmax()
-    #             t2output = model(turns[1], seq_len)
-    #             t2label = t2output.argmax()
-    #
-    #             # TODO obtain a sentiment class prediction from output
-    #             confusion[label][predicted_label] += 1
-
-
 
     dataset = SentimentDatasetEval(args.data, mode)
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=6)
@@ -326,7 +301,7 @@ def main():
     if args.restore:
         evaluate(hp, lookup)
     else:
-        train(hp, lookup)
+        train(hp, lookup, args.fb)
 
 if __name__ == '__main__':
     logger = multiprocessing.get_logger()
@@ -337,6 +312,7 @@ if __name__ == '__main__':
     parser.add_argument("--embedding", type=str, help="embedding type")
     parser.add_argument("--device", type=str, help="cuda for gpu and cpu otherwise", default="cpu")
     parser.add_argument("--restore", help="filepath to restore")
+    parser.add_argument("--fb", type=bool, help="True if should use fb training data, false for tweets", default=False)
     args = parser.parse_args()
 
     DEV = torch.device(args.device)
