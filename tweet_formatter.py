@@ -10,7 +10,7 @@ formatting = '{seq}|{l}|{lab}\n'
 eval_formatting = '{seq1}|{l1}|{seq3}|{l3}|{lab}\n'
 lines = []
 percent_dev = 0.80
-label_map = {"others":0, "happy":1, "sad":2, "angry":3}
+label_map = {"other":0, "others":0, "happy":1, "sad":2, "angry":3}
 word_set = set([padding, ''])
 for hashtag, emotions in hashtags.items():
     for e in emotions:
@@ -54,7 +54,7 @@ for line, label in lines:
     conv = re.sub(duplicateSpacePattern, ' ', conv)
     length = len(conv.split(' '))
     max_split = max(max_split, length)
-    convs.append((conv, length))
+    convs.append((conv, length, label))
 
 next(comp_data) # Skip first line
 for line in comp_data: #find max length and add words from test data
@@ -66,7 +66,7 @@ for line in comp_data: #find max length and add words from test data
         for w in s:
             word_set.add(w)
 
-for conv, length in convs:
+for conv, length, label in convs:
     if random() > percent_dev:
         file = f_test
     else:
@@ -75,6 +75,8 @@ for conv, length in convs:
         word_set.add(word)
     if length != max_split:
         conv += ' ' + ' '.join([padding]*(max_split - length))
+    if label != 0:
+        print(label)
     file.write(formatting.format(seq=conv,
                                  l=length,
                                  lab=label))
