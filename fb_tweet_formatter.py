@@ -102,11 +102,12 @@ for file in files:
             message = message.replace('|', '').replace('\"','').replace('\n', ' ').replace('\r', ' ')
             s = message.split(' ')
             length = len(s)
-            max_split = max(max_split, length)
-            for w in s:
-                word_set.add(w)
+            if length < 150: # Cut off messages >150
+                max_split = max(max_split, length)
+                for w in s:
+                    word_set.add(w)
 
-            message_data.append((message, length, label))
+                message_data.append((message, length, label))
 
 next(comp_data) # Skip first line
 for line in comp_data: #find max length and add words from test data
