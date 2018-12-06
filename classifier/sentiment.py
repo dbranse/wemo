@@ -134,6 +134,10 @@ def train(hp, embedding_lookup, fb = False):
     # Note: similar to above, we can map mode -> list to append to the appropriate list
     losses = {'train': train_loss, 'dev': dev_loss}
 
+    train_source_prefix = ''
+    if args.fb:
+        train_source_prefix = 'fb_'
+
     for epoch in range(1, hp.num_epochs+1):
         for mode in modes:
             running_loss = 0.0
@@ -161,19 +165,19 @@ def train(hp, embedding_lookup, fb = False):
             losses[mode].append(avg_loss)
             print("{} Loss: {}".format(mode, avg_loss))
         if (epoch == hp.num_epochs):
-            torch.save(model.state_dict(), "{embed}_{i}_weights.pt".format(embed=args.embedding, i=epoch))
+            torch.save(model.state_dict(), "{prefix}{embed}_{i}_weights.pt".format(prefix=train_source_prefix, embed=args.embedding, i=epoch))
 
     # TODO plot train_loss and dev_loss
     plt.plot(losses['train'])
     plt.xlabel('iterations')
     plt.ylabel('Train log loss')
-    plt.savefig('{}_train_loss_hist.png'.format(args.embedding))
+    plt.savefig('{prefix}{embed}_train_loss_hist.png'.format(prefix=train_source_prefix, embed=args.embedding))
 
     plt.figure()
     plt.plot(losses['dev'])
     plt.xlabel('iterations')
     plt.ylabel('Dev log loss')
-    plt.savefig('{}_dev_loss_hist.png'.format(args.embedding))
+    plt.savefig('{prefix}{embed}_dev_loss_hist.png'.format(prefix=train_source_prefix, embed=args.embedding))
 
 def evaluate(hp, embedding_lookup):
     """ This is used for the evaluation of the net. """
