@@ -75,8 +75,6 @@ for conv, length, label in convs:
         word_set.add(word)
     if length != max_split:
         conv += ' ' + ' '.join([padding]*(max_split - length))
-    if label != 0:
-        print(label)
     file.write(formatting.format(seq=conv,
                                  l=length,
                                  lab=label))
@@ -101,7 +99,6 @@ for line in comp_data:
 
     label = label_map[s[4].replace('\n', '')]
     test_data.write(eval_formatting.format(seq1=paddedTurn1,l1=length1,seq3=paddedTurn3,l3=length3,lab=label))
-
 
 pickle.dump({word:i for i, word in enumerate(word_set)}, f_dict1, pickle.HIGHEST_PROTOCOL)
 pickle.dump({i:word for i, word in enumerate(word_set)}, f_dict2, pickle.HIGHEST_PROTOCOL)
