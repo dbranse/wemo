@@ -161,7 +161,10 @@ def train(hp, embedding_lookup, fb = False):
             losses[mode].append(avg_loss)
             print("{} Loss: {}".format(mode, avg_loss))
         if (epoch == hp.num_epochs):
-            torch.save(model.state_dict(), "{embed}_{i}_weights.pt".format(embed=args.embedding, i=epoch))
+            if args.fb:
+                torch.save(model.state_dict(), "fb_{embed}_{i}_weights.pt".format(embed=args.embedding, i=epoch))
+            else:
+                torch.save(model.state_dict(), "{embed}_{i}_weights.pt".format(embed=args.embedding, i=epoch))
 
     # TODO plot train_loss and dev_loss
     plt.plot(losses['train'])
