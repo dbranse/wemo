@@ -1,0 +1,3 @@
+[submodule "deepnl"]
+	path = deepnl
+	url = https://github.com/attardi/deepnl
