@@ -5,7 +5,7 @@ import re
 import string
 import json
 
-files = ['FoxNews', 'CNN', 'ESPN', 'nytimes', 'time', 'HuffPostWeirdNews', 'theguardian', 'CartoonNetwork', \
+files = ['FoxNews', 'cnn', 'ESPN', 'nytimes', 'time', 'HuffPostWeirdNews', 'theguardian', 'CartoonNetwork', \
 'CookingLight', 'homecookingadventure', 'JustinBieber', 'nickelodeon', 'spongebob', 'Disney']
 
 happy_threshold = 0.3  # haha, love
