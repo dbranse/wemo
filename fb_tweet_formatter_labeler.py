@@ -5,7 +5,7 @@ import re
 import string
 import json
 
-files = ['FoxNews', 'CNN', 'ESPN', 'nytimes', 'time', 'HuffPostWeirdNews', 'theguardian', 'CartoonNetwork', \
+files = ['FoxNews', 'cnn', 'ESPN', 'nytimes', 'time', 'HuffPostWeirdNews', 'theguardian', 'CartoonNetwork', \
 'CookingLight', 'homecookingadventure', 'JustinBieber', 'nickelodeon', 'spongebob', 'Disney']
 
 happy_threshold = 0.3  # haha, love
@@ -110,12 +110,13 @@ for file in files:
                 message_data.append((message, length, label))
 
 for line in comp_data: #find max length and add words from test data
+    s = line.split('\t')
     for turn in [0,1,2]:  # Loop over three turns
-        s = line.split('\t')[turn].replace('|', '').replace('\"','').replace('\n', '')
-        s = s.split(' ')
-        length = len(s)
+        t = s[turn].replace('|', '').replace('\"','').replace('\n', '')
+        t = t.split(' ')
+        length = len(t)
         max_split = max(max_split, length)
-        for w in s:
+        for w in t:
             word_set.add(w)
 
 for conv, length, label in convs:
