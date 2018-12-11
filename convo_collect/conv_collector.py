@@ -1,8 +1,8 @@
 from tccp import search_conversation
 
-with open('collected_convos.txt', 'a') as f:
-    while True:
-        try:
+while True:
+    try:
+        with open('collected_convos.txt', 'a') as f:
             for conversation in search_conversation({"l": "en"}, continue_path="search_history.tmp"):
                 if len(conversation) != 3:
                     continue
@@ -15,5 +15,5 @@ with open('collected_convos.txt', 'a') as f:
                 if a1 != a3 or a2 == a1 or len(t1) == 0 or len(t2) == 0 or len(t3) == 0:
                     continue
                 f.write('{}\t{}\t{}\n'.format(t1, t2, t3))
-        except Exception as e:
-            print(e)
+    except Exception as e:
+        print(e)

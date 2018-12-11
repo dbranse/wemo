@@ -1,0 +1,20 @@
+#!/bin/bash
+# Note that the lines with $ are the qsub flags
+# Execute from the current working directory
+#$ -cwd
+#
+#  We want to use 1 gpu
+#$ -l gpus=1
+#  Memory
+#$ -l vf=2G
+# If you want to get e-mail notification you can do the following
+#$ -m aes
+ 
+# Activate you Virtual environment
+source /course/cs2952d/pytorch-gpu/bin/activate
+ 
+# Run command 1
+#python3 sentiment.py --data .. --embedding "both" --device cuda
+ 
+# Run command 2
+python3 sentiment.py --data .. --embedding "both" --device cuda --restore both_10_weights.pt >> bothResults69.txt

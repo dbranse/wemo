@@ -134,6 +134,10 @@ def train(hp, embedding_lookup, fb = False):
     # Note: similar to above, we can map mode -> list to append to the appropriate list
     losses = {'train': train_loss, 'dev': dev_loss}
 
+    train_source_prefix = ''
+    if args.fb:
+        train_source_prefix = 'fb_'
+
     for epoch in range(1, hp.num_epochs+1):
         for mode in modes:
             running_loss = 0.0
@@ -161,28 +165,25 @@ def train(hp, embedding_lookup, fb = False):
             losses[mode].append(avg_loss)
             print("{} Loss: {}".format(mode, avg_loss))
         if (epoch == hp.num_epochs):
-            if args.fb:
-                torch.save(model.state_dict(), "fb_{embed}_{i}_weights.pt".format(embed=args.embedding, i=epoch))
-            else:
-                torch.save(model.state_dict(), "{embed}_{i}_weights.pt".format(embed=args.embedding, i=epoch))
+            torch.save(model.state_dict(), "{prefix}{embed}_{i}_weights.pt".format(prefix=train_source_prefix, embed=args.embedding, i=epoch))
 
     # TODO plot train_loss and dev_loss
     plt.plot(losses['train'])
     plt.xlabel('iterations')
     plt.ylabel('Train log loss')
-    plt.savefig('{}_train_loss_hist.png'.format(args.embedding))
+    plt.savefig('{prefix}{embed}_train_loss_hist.png'.format(prefix=train_source_prefix, embed=args.embedding))
 
     plt.figure()
     plt.plot(losses['dev'])
     plt.xlabel('iterations')
     plt.ylabel('Dev log loss')
-    plt.savefig('{}_dev_loss_hist.png'.format(args.embedding))
+    plt.savefig('{prefix}{embed}_dev_loss_hist.png'.format(prefix=train_source_prefix, embed=args.embedding))
 
 def evaluate(hp, embedding_lookup):
     """ This is used for the evaluation of the net. """
     mode = 'test' # use test data
 
-    dataset = SentimentDataset(args.data, mode)
+    dataset = SentimentDatasetEval(args.data, mode)
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=6)
     model = SentimentNetwork(hp.rnn_hidden_size, embedding_lookup, device=DEV)
     model.load_state_dict(torch.load(args.restore))
@@ -191,33 +192,32 @@ def evaluate(hp, embedding_lookup):
 
     confusion = np.zeros((4,4)) # TODO fill out this confusion matrix
     #1 turn eval
-    for (vectorized_seq, seq_len), label in tqdm(dataloader, ascii=True):
-        vectorized_seq = vectorized_seq
-        seq_len = seq_len.to(DEV)
-        label = label.to(DEV)
-        model.eval()
-        with torch.no_grad():
-            output = model(vectorized_seq, seq_len)
-            # TODO obtain a sentiment class prediction from output
-            predicted_label = output.argmax()
-            # TODO obtain a sentiment class prediction from output
-            confusion[label][predicted_label] += 1
-    # 2 turn eval
-    #for (turn1, len1, turn3, len3), label in tqdm(dataloader, ascii=True):
-    #    len1 = len1.to(DEV)
-    #    len3 = len3.to(DEV)
+    #for (vectorized_seq, seq_len), label in tqdm(dataloader, ascii=True):
+    #    vectorized_seq = vectorized_seq
+    #    seq_len = seq_len.to(DEV)
     #    label = label.to(DEV)
     #    model.eval()
     #    with torch.no_grad():
-    #        output1 = model(turn1, len1)
-    #        predicted_label1 = output1.argmax()
-    #        output3 = model(turn3, len3)
-    #        predicted_label3 = output3.argmax()
-
-    #        predicted_label = predicted_label3
-    #        if predicted_label.item() == 0:
-    #            predicted_label = predicted_label1
+    #        output = model(vectorized_seq, seq_len)
+    #        # TODO obtain a sentiment class prediction from output
+    #        predicted_label = output.argmax()
+    #        # TODO obtain a sentiment class prediction from output
     #        confusion[label][predicted_label] += 1
+    # 2 turn eval
+    for (turn1, len1, turn3, len3), label in tqdm(dataloader, ascii=True):
+        len1 = len1.to(DEV)
+        len3 = len3.to(DEV)
+        label = label.to(DEV)
+        model.eval()
+        with torch.no_grad():
+            output1 = model(turn1, len1)
+            predicted_label1 = output1.argmax()
+            output3 = model(turn3, len3)
+            predicted_label3 = output3.argmax()
+            predicted_label = predicted_label3
+            if predicted_label.item() == 0:
+                predicted_label = predicted_label1
+            confusion[label][predicted_label] += 1
 
     # baseline constants
     NUM_CLASSES = 4
