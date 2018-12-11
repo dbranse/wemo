@@ -25,7 +25,7 @@ class GloveHParams(HParams):
 
 class ElmoGloveHParams(HParams):
     def __init__(self):
-        super(ElmoGloveHParams, self).__init__(bs=64, lr=1e-4, ne=5, hs=1024)
+        super(ElmoGloveHParams, self).__init__(bs=64, lr=1e-4, ne=10, hs=1024)
 
 class RandEmbedHParams(HParams):
     def __init__(self, embed_size):
