@@ -59,5 +59,5 @@ for line in tqdm(f.readlines()):
         cache[sid] = "Not Available"
     text = text.replace('\n', ' ',)
     text = re.sub(r'\s+', ' ', text)
-    #print json.dumps(tweet, indent=2)
+    # print json.dumps(tweet, indent=2)
     print "\t".join(fields + [text]).encode('utf-8')
