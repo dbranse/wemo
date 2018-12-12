@@ -1,0 +1,17 @@
+#!/bin/bash
+# Note that the lines with $ are the qsub flags
+# Execute from the current working directory
+#$ -cwd
+#
+#  We want to use 1 gpu
+#$ -l gpus=1
+#  Memory
+#$ -l vf=2G
+# If you want to get e-mail notification you can do the following
+#$ -m aes
+
+cp ../originalVectors.txt vectors.txt
+cp ../originalVocab.txt vocab.txt
+
+python bin/dl-sentiwords.py ../sentiment_embedding_files/tweets.tsv --vectors vectors.txt --vocab vocab.txt
+
