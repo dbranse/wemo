@@ -335,6 +335,17 @@ def main():
                 newSeq.append("<pad>")
         newTrainTexts.append(' '.join(newSeq))
     data2 = np.array(newTrainTexts)
+    newTestTexts = []
+    for seq in testTexts:
+        newSeq = []
+        seq = seq.split(' ')
+        for i in range(MAX_SEQUENCE_LENGTH):
+            try:
+                newSeq.append(seq[i])
+            except:
+                newSeq.append("<pad>")
+        newTestTexts.append(' '.join(newSeq))
+    testData2 = np.array(newTestTexts)
     labels = to_categorical(np.asarray(labels))
     print("Shape of training data tensor: ", data.shape)
     print("Shape of label tensor: ", labels.shape)
@@ -353,6 +364,7 @@ def main():
                "microF1" : []}
  
     print("Starting k-fold cross validation...")
+    
     for k in range(NUM_FOLDS):
         print('-'*40)
         print("Fold %d/%d" % (k+1, NUM_FOLDS))
@@ -370,7 +382,8 @@ def main():
         model = buildModel(embeddingMatrix)
         model.fit([xTrain, xTrain2], yTrain, 
                   validation_data=([xVal, xVal2], yVal),
-                  epochs=NUM_EPOCHS, batch_size=BATCH_SIZE)
+                  epochs=NUM_EPOCHS, batch_size=BATCH_SIZE,
+                  verbose=2)
 
         predictions = model.predict([xVal, xVal2], batch_size=BATCH_SIZE)
         accuracy, microPrecision, microRecall, microF1 = getMetrics(predictions, yVal)
@@ -389,13 +402,14 @@ def main():
     
     print("Retraining model on entire data to create solution file")
     model = buildModel(embeddingMatrix)
-    model.fit(data, labels, epochs=NUM_EPOCHS, batch_size=BATCH_SIZE)
+    model.fit([data, data2], labels, epochs=NUM_EPOCHS, 
+              batch_size=BATCH_SIZE, verbose=2)
     model.save('EP%d_LR%de-5_LDim%d_BS%d.h5'%(NUM_EPOCHS, int(LEARNING_RATE*(10**5)), LSTM_DIM, BATCH_SIZE))
     # model = load_model('EP%d_LR%de-5_LDim%d_BS%d.h5'%(NUM_EPOCHS, int(LEARNING_RATE*(10**5)), LSTM_DIM, BATCH_SIZE))
 
     print("Creating solution file...")
     testData = pad_sequences(testSequences, maxlen=MAX_SEQUENCE_LENGTH)
-    predictions = model.predict(testData, batch_size=BATCH_SIZE)
+    predictions = model.predict([testData, testData2], batch_size=BATCH_SIZE)
     predictions = predictions.argmax(axis=1)
 
     with io.open(solutionPath, "w", encoding="utf8") as fout:
