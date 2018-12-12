@@ -4,7 +4,7 @@ from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
 from keras.models import Model
-from keras.layers import Dense, Embedding, LSTM, LeakyReLU, concatenate, Input
+from keras.layers import Dense, Embedding, Lambda, LSTM, LeakyReLU, concatenate, Input
 from keras.engine.topology import Layer
 from keras import optimizers
 from keras.models import load_model
@@ -43,31 +43,36 @@ NUM_EPOCHS = None                  # Number of epochs to train a model for
 label2emotion = {0:"others", 1:"happy", 2: "sad", 3:"angry"}
 emotion2label = {"others":0, "happy":1, "sad":2, "angry":3}
 
-class ElmoEmbeddingLayer(Layer):
-    def __init__(self, **kwargs):
-        self.dimensions = 1024
-        self.trainable=True
-        super(ElmoEmbeddingLayer, self).__init__(**kwargs)
+#class ElmoEmbeddingLayer(Layer):
+#    def __init__(self, **kwargs):
+#        self.dimensions = 1024
+#        self.trainable=True
+#        super(ElmoEmbeddingLayer, self).__init__(**kwargs)
+#
+#    def build(self, input_shape):
+#        self.elmo = hub.Module('https://tfhub.dev/google/elmo/2', trainable=self.trainable,
+#                               name="{}_module".format(self.name))
+#
+#        self.trainable_weights += K.tf.trainable_variables(scope="^{}_module/.*".format(self.name))
+#        super(ElmoEmbeddingLayer, self).build(input_shape)
+#
+#    def call(self, x, mask=None):
+#        result = self.elmo(K.squeeze(K.cast(x, tf.string), axis=1),
+#                      as_dict=True,
+#                      signature='default',
+#                      )['elmo']
+#        return result
+#
+#    def compute_mask(self, inputs, mask=None):
+#        return K.not_equal(inputs, '--PAD--')
+#
+#    def compute_output_shape(self, input_shape):
+#        return (input_shape[0], self.dimensions)
 
-    def build(self, input_shape):
-        self.elmo = hub.Module('https://tfhub.dev/google/elmo/2', trainable=self.trainable,
-                               name="{}_module".format(self.name))
-
-        self.trainable_weights += K.tf.trainable_variables(scope="^{}_module/.*".format(self.name))
-        super(ElmoEmbeddingLayer, self).build(input_shape)
-
-    def call(self, x, mask=None):
-        result = self.elmo(K.squeeze(K.cast(x, tf.string), axis=1),
-                      as_dict=True,
-                      signature='default',
-                      )['default']
-        return result
-
-    def compute_mask(self, inputs, mask=None):
-        return K.not_equal(inputs, '--PAD--')
-
-    def compute_output_shape(self, input_shape):
-        return (input_shape[0], self.dimensions)
+elmo_model = hub.Module('https://tfhub.dev/google/elmo/2', trainable=False,
+                               name="{}_module".format('elmo'))
+def ElmoEmbeddingLayer(x):
+    return elmo_model(K.squeeze(K.cast(x, tf.string), axis=1), as_dict=True, signature='default')['elmo']
 
 def preprocessData(dataFilePath, mode):
     """Load data from a file, process and return indices, conversations and labels in separate lists
@@ -246,8 +251,8 @@ def buildModel(semanticEmbeddingMatrix):
         model : A basic LSTM model
     """
     inp = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32', name='input')
-
-    elmoEmbeddingLayer = ElmoEmbeddingLayer()(inp)
+    inp2 = Input(shape=(1, ), dtype=tf.string)
+    elmoEmbeddingLayer = Lambda(ElmoEmbeddingLayer, output_shape = (MAX_SEQUENCE_LENGTH, 1024))(inp2)
     elmoOut = LSTM(LSTM_DIM, dropout=DROPOUT)(elmoEmbeddingLayer)
 
     semanticEmbeddingLayer = Embedding(semanticEmbeddingMatrix.shape[0],
@@ -262,7 +267,7 @@ def buildModel(semanticEmbeddingMatrix):
     activated = LeakyReLU(alpha=0.3)(hidden)
     output = Dense(NUM_CLASSES, activation='softmax')(activated)
     
-    model = Model(inputs = [inp], outputs = [output])
+    model = Model(inputs = [inp, inp2], outputs = [output])
     rmsprop = optimizers.rmsprop(lr=LEARNING_RATE)
     model.compile(loss='categorical_crossentropy',
                   optimizer=rmsprop,
@@ -319,21 +324,34 @@ def main():
     embeddingMatrix = getEmbeddingMatrix(wordIndex)
 
     data = pad_sequences(trainSequences, maxlen=MAX_SEQUENCE_LENGTH)
+    newTrainTexts = []
+    for seq in trainTexts:
+        newSeq = []
+        seq = seq.split(' ')
+        for i in range(MAX_SEQUENCE_LENGTH):
+            try:
+                newSeq.append(seq[i])
+            except:
+                newSeq.append("<pad>")
+        newTrainTexts.append(' '.join(newSeq))
+    data2 = np.array(newTrainTexts)
     labels = to_categorical(np.asarray(labels))
     print("Shape of training data tensor: ", data.shape)
     print("Shape of label tensor: ", labels.shape)
-        
+    print("Shape of training data2 tensor: ", data2.shape)
+
     # Randomize data
     np.random.shuffle(trainIndices)
     data = data[trainIndices]
+    data2 = data2[trainIndices]
     labels = labels[trainIndices]
-      
+
     # Perform k-fold cross validation
     metrics = {"accuracy" : [],
                "microPrecision" : [],
                "microRecall" : [],
                "microF1" : []}
-    
+ 
     print("Starting k-fold cross validation...")
     for k in range(NUM_FOLDS):
         print('-'*40)
@@ -343,16 +361,18 @@ def main():
         index2 = validationSize * (k+1)
             
         xTrain = np.vstack((data[:index1],data[index2:]))
+        xTrain2 = np.vstack((data2[:index1, None],data2[index2:, None]))
         yTrain = np.vstack((labels[:index1],labels[index2:]))
         xVal = data[index1:index2]
+        xVal2 = data2[index1:index2]
         yVal = labels[index1:index2]
         print("Building model...")
         model = buildModel(embeddingMatrix)
-        model.fit(xTrain, yTrain, 
-                  validation_data=(xVal, yVal),
+        model.fit([xTrain, xTrain2], yTrain, 
+                  validation_data=([xVal, xVal2], yVal),
                   epochs=NUM_EPOCHS, batch_size=BATCH_SIZE)
 
-        predictions = model.predict(xVal, batch_size=BATCH_SIZE)
+        predictions = model.predict([xVal, xVal2], batch_size=BATCH_SIZE)
         accuracy, microPrecision, microRecall, microF1 = getMetrics(predictions, yVal)
         metrics["accuracy"].append(accuracy)
         metrics["microPrecision"].append(microPrecision)
