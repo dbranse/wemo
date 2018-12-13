@@ -1,0 +1,23 @@
+no display found. Using non-interactive Agg backend
+no display found. Using non-interactive Agg backend
+no display found. Using non-interactive Agg backend
+no display found. Using non-interactive Agg backend
+no display found. Using non-interactive Agg backend
+no display found. Using non-interactive Agg backend
+no display found. Using non-interactive Agg backend
+no display found. Using non-interactive Agg backend
+torch.Size([64])
+torch.Size([64])
+no display found. Using non-interactive Agg backend
+no display found. Using non-interactive Agg backend
+Class happy : Precision : 0.718, Recall : 0.745, F1 : 0.731
+Class sad : Precision : 0.731, Recall : 0.393, F1 : 0.511
+Class angry : Precision : 0.711, Recall : 0.798, F1 : 0.752
+Ignoring the Others class, Macro Precision : 0.7202, Macro Recall : 0.6454, Macro F1 : 0.6808
+Ignoring the Others class, Micro TP : 12129, FP : 4807, FN : 6034
+Accuracy : 0.7269, Micro Precision : 0.7162, Micro Recall : 0.6678, Micro F1 : 0.6911
+Confusion matrix:
+[[0.24072144 0.0092986  0.00452906 0.01747495]
+ [0.01743487 0.11743487 0.00496994 0.01779559]
+ [0.02869739 0.02036072 0.08396794 0.08052104]
+ [0.0343487  0.01635271 0.02136273 0.28472946]]
