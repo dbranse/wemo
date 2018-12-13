@@ -16,6 +16,7 @@ import tensorflow as tf
 import tensorflow_hub as hub
 from keras.backend.tensorflow_backend import set_session
 import keras.backend as K
+import sys
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
 config.log_device_placement = True  # to log device placement (on which device the operation ran)
@@ -40,7 +41,7 @@ LSTM_DIM = None                    # The dimension of the representations learnt
 DROPOUT = None                     # Fraction of the units to drop for the linear transformation of the inputs. Ref - https://keras.io/layers/recurrent/
 NUM_EPOCHS = None                  # Number of epochs to train a model for
 
-ALPHA = 0.5
+ALPHA = sys.argv[1]
 
 label2emotion = {0:"others", 1:"happy", 2: "sad", 3:"angry"}
 emotion2label = {"others":0, "happy":1, "sad":2, "angry":3}
@@ -143,6 +144,7 @@ def getMetrics(predictions, ground):
         microF1 : Harmonic mean of microPrecision and microRecall. Higher value implies better classification  
     """
     # [0.1, 0.3 , 0.2, 0.1] -> [0, 1, 0, 0]
+    predictions = predictions[:4,]
     discretePredictions = to_categorical(predictions.argmax(axis=1))
     
     truePositives = np.sum(discretePredictions*ground, axis=0)
@@ -247,7 +249,7 @@ def getEmbeddingMatrix(wordIndex):
     return embeddingMatrix
             
 
-def buildModel(semanticEmbeddingMatrix, sources):
+def buildModel(semanticEmbeddingMatrix):
     """Constructs the architecture of the model
     Input:
         embeddingMatrix : The embedding matrix to be loaded in the embedding layer.
@@ -270,20 +272,24 @@ def buildModel(semanticEmbeddingMatrix, sources):
     hidden = Dense(64)(concat)
     activated = LeakyReLU(alpha=0.3)(hidden)
     output = Dense(NUM_CLASSES, activation='softmax')(activated)
-    
-    model = Model(inputs = [inp, inp2], outputs = [output])
+    inp3 = Input(shape=(1, ), dtype='int32')
+    real_output = concatenate([output, inp3])
+
+    model = Model(inputs = [inp, inp2, inp3], outputs = [real_output])
     rmsprop = optimizers.rmsprop(lr=LEARNING_RATE)
-    model.compile(loss=custom_loss_wrapper(sources, ALPHA),
+    model.compile(loss=custom_loss_wrapper(ALPHA),
                   optimizer=rmsprop,
                   metrics=['acc'])
     return model
 
-def custom_loss_wrapper(input_source, alpha):
+def custom_loss_wrapper(alpha):
     def custom_loss(y_true, y_pred):
+        real_y_pred = y_pred[:4]
+        input_source = y_pred[4]
         if label2source[input_source] == "competition":
-            return keras.losses.categorical_crossentropy(y_true, y_pred)
+            return keras.losses.categorical_crossentropy(y_true, real_y_pred)
         else:
-            return alpha * keras.losses.categorical_crossentropy(y_true, y_pred)
+            return alpha * keras.losses.categorical_crossentropy(y_true, real_y_pred)
     return custom_loss
     
 
@@ -295,7 +301,7 @@ def main():
     with open(args.config) as configfile:
         config = json.load(configfile)
         
-    global trainDataPath, testDataPath, solutionPath, gloveDir
+    global trainDataPath, testDataPath, weakDataPath, solutionPath, gloveDir
     global NUM_FOLDS, NUM_CLASSES, MAX_NB_WORDS, MAX_SEQUENCE_LENGTH, EMBEDDING_DIM
     global BATCH_SIZE, LSTM_DIM, DROPOUT, NUM_EPOCHS, LEARNING_RATE    
     
@@ -440,8 +446,8 @@ def main():
         xVal2 = data2[index1:index2]
         yVal = labels[index1:index2]
         print("Building model...")
-        model = buildModel(embeddingMatrix, sources)
-        model.fit([xTrain, xTrain2], yTrain, 
+        model = buildModel(embeddingMatrix)
+        model.fit([xTrain, xTrain2, sources], yTrain, 
                   validation_data=([xVal, xVal2], yVal),
                   epochs=NUM_EPOCHS, batch_size=BATCH_SIZE,
                   verbose=2)
@@ -481,8 +487,8 @@ def main():
 
 
 
-    model = buildModel(embeddingMatrix, sources)
-    model.fit([data, data2], labels, epochs=NUM_EPOCHS, 
+    model = buildModel(embeddingMatrix)
+    model.fit([data, data2, sources], labels, epochs=NUM_EPOCHS, 
               batch_size=BATCH_SIZE, verbose=2)
     model.save('EP%d_LR%de-5_LDim%d_BS%d.h5'%(NUM_EPOCHS, int(LEARNING_RATE*(10**5)), LSTM_DIM, BATCH_SIZE))
     # model = load_model('EP%d_LR%de-5_LDim%d_BS%d.h5'%(NUM_EPOCHS, int(LEARNING_RATE*(10**5)), LSTM_DIM, BATCH_SIZE))
@@ -490,6 +496,7 @@ def main():
     print("Creating solution file...")
     testData = pad_sequences(testSequences, maxlen=MAX_SEQUENCE_LENGTH)
     predictions = model.predict([testData, testData2], batch_size=BATCH_SIZE)
+    predictions = predictions[:4,]
     predictions = predictions.argmax(axis=1)
 
     with io.open(solutionPath, "w", encoding="utf8") as fout:
