@@ -1,0 +1,11 @@
+Class happy : Precision : 0.424, Recall : 0.546, F1 : 0.477
+Class sad : Precision : 0.335, Recall : 0.392, F1 : 0.361
+Class angry : Precision : 0.257, Recall : 0.767, F1 : 0.385
+Ignoring the Others class, Macro Precision : 0.3386, Macro Recall : 0.5687, Macro F1 : 0.4245
+Ignoring the Others class, Micro TP : 8687, FP : 19615, FN : 6525
+Accuracy : 0.3175, Micro Precision : 0.3069, Micro Recall : 0.5711, Micro F1 : 0.3993
+Confusion matrix:
+[[0.02944297 0.08252653 0.10036472 0.28328912]
+ [0.00755968 0.07685676 0.01618037 0.04008621]
+ [0.01329576 0.01551724 0.07108753 0.08123342]
+ [0.01130637 0.00633289 0.02483422 0.14008621]]
