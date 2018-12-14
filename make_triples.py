@@ -1,4 +1,5 @@
 import csv
+import random
 with open('train_data.txt', 'r') as tsv, open('newLabeledTrainWithTriples.txt', 'w') as tsv2:
   c = csv.DictReader(tsv, delimiter='|')
   m = 0
@@ -11,7 +12,9 @@ with open('train_data.txt', 'r') as tsv, open('newLabeledTrainWithTriples.txt', 
       newd = {'id':m, 'turn1':no_pad, 'turn2':no_pad, 'turn3':no_pad, 'label':for_u[int(i['sentiment_label'])]}
       a.append(newd)
       m += 1
+  
   print(m)
+  random.shuffle(a)
   dict_writer = csv.DictWriter(tsv2, a[0].keys(), delimiter='\t')
   dict_writer.writeheader()
   dict_writer.writerows(a)
